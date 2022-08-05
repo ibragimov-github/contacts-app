@@ -12,11 +12,18 @@ import TextField from '@mui/material/TextField';
 import { Button } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import DoneIcon from '@mui/icons-material/Done';
-import { getDatabase, ref, set, get, child } from "firebase/database";
+import { getDatabase, ref, set, get, child, onValue } from "firebase/database";
 import { getAuth, User } from "firebase/auth";
 import { v4 as uuidv4 } from 'uuid';
+import Contact from "components/Contact/Contact";
 
 interface IHomepage { }
+interface IContact {
+  firstName: string,
+  id: string,
+  lastName: string,
+  phoneNumber: string
+}
 
 function Homepage({ }: IHomepage) {
   const [firstName, setFirstName] = useState('');
@@ -24,12 +31,23 @@ function Homepage({ }: IHomepage) {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [open, setOpen] = useState(false);
   const [save, setSave] = useState(true);
-  const [contacts, setContacts] = useState([]);
+  const [contacts, setContacts] = useState<Array>([]);
+  const auth = getAuth();
+  const user: User | null = auth.currentUser;
+  const dbRef = ref(getDatabase());
   const db = getDatabase()
+  if (user) {
+    const contactsUpdate = ref(db, 'users/' + user.uid + '/database');
+    onValue(contactsUpdate, (snapshot) => {
+      if (snapshot.exists()) {
+        if (snapshot.val().length > contacts.length || snapshot.val().length < contacts.length) {
+          setContacts(snapshot.val());
+        }
+      }
+    })
+  }
   const pushData = () => {
-    const auth = getAuth();
-    const user: User | null = auth.currentUser;
-    const dbRef = ref(getDatabase());
+
     get(child(dbRef, `users/${user.uid}/database`)).then(snapshot => {
       if (snapshot.exists()) {
         set(ref(db, 'users/' + user.uid + '/database'), [
@@ -130,7 +148,14 @@ function Homepage({ }: IHomepage) {
         aria-label="add">
         <AddIcon />
       </Fab>
-      
+      {contacts.map((el: IContact) => {
+        return (<Contact
+          key={el.id}
+          data={el} 
+          contacts={contacts}
+          setContacts={setContacts}
+          />)
+      })}
     </div>
   );
 }

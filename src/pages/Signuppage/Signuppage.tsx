@@ -8,17 +8,27 @@ import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
 import { setUser } from "store/slices/userSlice";
 import { useDispatch } from 'react-redux'
 import { getDatabase, ref, set } from "firebase/database";
+import { Alert } from '@mui/material';
+import Snackbar from '@mui/material/Snackbar';
 
 
 interface ISignuppage { }
 
 function Signuppage({ }: ISignuppage) {
+  const [open, setOpen] = useState(false);
   const nav = useNavigate();
   const dispatch = useDispatch();
   const auth = getAuth();
   const [login, setLogin] = useState('');
   const [password, setPassword] = useState('');
   const navigate = useNavigate();
+  const handleCloseError = (event, reason) => {
+    if (reason === 'clickaway') {
+      return;
+    }
+
+    setOpen(false);
+  };
   const signUp = (e: Event) => {
     e.preventDefault();
     createUserWithEmailAndPassword(auth, login, password).then(({ user }) => {
@@ -33,10 +43,20 @@ function Signuppage({ }: ISignuppage) {
         email: user.email,
       }).then((e) => console.log(e))
       nav('/');
-    })
+    }).catch(()=>setOpen(true))
   }
   return (
     <div className={styles.container}>
+      <Snackbar
+        open={open}
+        autoHideDuration={6000}
+        onClose={handleCloseError}
+      >
+        <Alert
+          severity="error"
+          onClose={handleCloseError}
+        >data is incorrect</Alert>
+      </Snackbar>
       <Typography
         variant='h4'
         component='span'

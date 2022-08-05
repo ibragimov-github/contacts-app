@@ -7,15 +7,25 @@ import { useState } from 'react';
 import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
 import { setUser } from "store/slices/userSlice";
 import { useDispatch } from 'react-redux'
+import { Alert } from '@mui/material';
+import Snackbar from '@mui/material/Snackbar';
 
 interface ILoginpage { };
 
 function Loginpage({ }: ILoginpage) {
+  const [open, setOpen] = useState(false);
   const [login, setLogin] = useState('');
   const [password, setPassword] = useState('');
   const auth = getAuth();
   const nav = useNavigate();
   const dispatch = useDispatch();
+  const handleCloseError = (event, reason) => {
+    if (reason === 'clickaway') {
+      return;
+    }
+
+    setOpen(false);
+  };
   const signin = (e: Event) => {
     e.preventDefault();
     signInWithEmailAndPassword(auth, login, password).then(({ user }) => {
@@ -26,10 +36,20 @@ function Loginpage({ }: ILoginpage) {
       }
       dispatch(setUser(userInfo))
       nav('/');
-    })
+    }).catch(()=> setOpen(true))
   }
   return (
     <div className={styles.container}>
+      <Snackbar
+        open={open}
+        autoHideDuration={6000}
+        onClose={handleCloseError}
+      >
+        <Alert 
+          severity="error"
+          onClose={handleCloseError}
+        >data is incorrect</Alert>
+      </Snackbar>
       <Typography
         variant='h4'
         component='span'

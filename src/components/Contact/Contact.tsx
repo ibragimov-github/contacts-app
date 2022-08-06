@@ -14,7 +14,7 @@ interface IContact {
     phoneNumber: string
   },
   contacts?: Array<IContact>|undefined,
-  setContacts?: any
+  setContacts?: (contacts: IContact) => void
 }
 
 function Contact({ data, contacts, setContacts }: IContact) {
